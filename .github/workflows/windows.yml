@@ -1,0 +1,19 @@
+name: Windows build
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test -p redshift-core --release
+      - run: cargo build --release -p redshift-launcher
+      - name: Portable zip
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory dist/RedshiftLauncher/data -Force | Out-Null
+          Copy-Item target/release/redshift-launcher.exe dist/RedshiftLauncher/RedshiftLauncher.exe
+          Compress-Archive dist/RedshiftLauncher RedshiftLauncher-portable.zip
+      - uses: actions/upload-artifact@v4
+        with: { name: RedshiftLauncher-windows, path: "RedshiftLauncher-portable.zip\ntarget/release/redshift-launcher.exe" }
